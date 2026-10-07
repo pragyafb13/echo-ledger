@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WaitlistForm } from "@/components/WaitlistForm";
 
 export default function LandingPage() {
   return (
@@ -16,7 +17,7 @@ export default function LandingPage() {
           </span>
         </div>
         <nav className="flex items-center gap-2 sm:gap-3">
-          <Link href="/pricing" className="rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-white/60 dark:text-zinc-300">
+          <Link href="/pricing" className="hidden rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-white/60 sm:inline dark:text-zinc-300">
             Pricing
           </Link>
           <Link href="/login" className="rounded-xl px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-white/60 dark:text-zinc-300">
@@ -28,10 +29,11 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-5xl px-4 pb-20 pt-10 sm:px-6 sm:pt-16">
+      <main className="relative z-10 mx-auto max-w-5xl px-4 pb-24 pt-10 sm:px-6 sm:pt-16">
+        {/* Hero */}
         <section className="mx-auto max-w-2xl text-center">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
-            Commitment OS for everyday life
+          <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-violet-600 dark:border-violet-800 dark:bg-zinc-900/70 dark:text-violet-400">
+            Now live · Free to start
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
             <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
@@ -42,7 +44,8 @@ export default function LandingPage() {
           </h1>
           <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
             Echo Ledger turns calls, voice notes, and chat into tracked commitments —
-            who promised what, by when — so you follow up with clarity every morning.
+            <strong className="font-semibold text-zinc-800 dark:text-zinc-200"> who promised what, by when</strong> —
+            so you follow up with clarity every morning.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
@@ -55,61 +58,127 @@ export default function LandingPage() {
               href="/app"
               className="rounded-2xl border border-indigo-200 bg-white/80 px-6 py-3 text-sm font-bold text-indigo-700 dark:border-indigo-700 dark:bg-zinc-900 dark:text-indigo-300"
             >
-              Try without account
+              Try the app
             </Link>
+          </div>
+          <p className="mt-4 text-[11px] text-zinc-400">
+            No credit card · Works with paste, upload, or live record
+          </p>
+        </section>
+
+        {/* How it works */}
+        <section className="mx-auto mt-20 max-w-4xl">
+          <h2 className="text-center text-lg font-bold text-zinc-900 dark:text-zinc-50">
+            How it works
+          </h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                step: "1",
+                title: "Capture",
+                body: "Upload a call, record a voice memo, or paste a transcript / chat.",
+              },
+              {
+                step: "2",
+                title: "Extract",
+                body: "AI pulls only real commitments — person, promise, deadline.",
+              },
+              {
+                step: "3",
+                title: "Follow through",
+                body: "Today view + week strip. Mark done, track overdue, stay clear.",
+              },
+            ].map((s) => (
+              <div
+                key={s.step}
+                className="rounded-2xl border border-white/60 bg-white/80 p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80"
+              >
+                <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white">
+                  {s.step}
+                </div>
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">{s.title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{s.body}</p>
+              </div>
+            ))}
           </div>
         </section>
 
-        <section className="mx-auto mt-16 grid max-w-4xl gap-4 sm:grid-cols-3">
-          {[
-            {
-              title: "Capture",
-              body: "Upload audio, record live, or paste a transcript. AI extracts only real commitments.",
-              color: "from-indigo-500 to-violet-500",
-            },
-            {
-              title: "Today view",
-              body: "Wake up to overdue, due today, and waiting — your personal follow-up inbox.",
-              color: "from-violet-500 to-fuchsia-500",
-            },
-            {
-              title: "Follow through",
-              body: "Mark done, cancel, or track until the deadline. Keep every promise in sight.",
-              color: "from-fuchsia-500 to-rose-500",
-            },
-          ].map((f) => (
-            <div
-              key={f.title}
-              className="rounded-2xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/70"
-            >
-              <div className={`mb-3 h-1.5 w-10 rounded-full bg-gradient-to-r ${f.color}`} />
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">{f.title}</h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{f.body}</p>
-            </div>
-          ))}
+        {/* Who it's for */}
+        <section className="mx-auto mt-16 max-w-4xl">
+          <h2 className="text-center text-lg font-bold text-zinc-900 dark:text-zinc-50">
+            Built for people who chase follow-ups
+          </h2>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {[
+              { title: "Job seekers", body: "HR said they'll confirm by Friday. Don't let it slip." },
+              { title: "Freelancers & sales", body: "Client commits, you track — without a heavy CRM." },
+              { title: "Founders", body: "Partner promises, vendor deadlines, one calm list." },
+              { title: "Anyone juggling people", body: "Family, team, or friends — promises stay visible." },
+            ].map((x) => (
+              <div
+                key={x.title}
+                className="rounded-2xl border border-indigo-100/80 bg-white/60 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+              >
+                <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100">{x.title}</p>
+                <p className="mt-0.5 text-xs text-zinc-500">{x.body}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
-        <section className="mx-auto mt-16 max-w-2xl rounded-3xl border border-indigo-100 bg-white/80 p-8 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
-          <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
-            Built by a founder who lived the problem
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Job threads, sales follow-ups, family promises — tracking who said what by when
-            across chats and calls was chaos. Echo Ledger is the calm ledger of commitments
-            I needed every morning — not another dump of meeting notes.
+        {/* Founder story */}
+        <section className="mx-auto mt-16 max-w-2xl rounded-3xl border border-indigo-100 bg-white/90 p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/90">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+            Founder story
           </p>
-          <p className="mt-4 text-xs font-semibold text-violet-600 dark:text-violet-400">
+          <h2 className="mt-2 text-xl font-bold text-zinc-900 dark:text-zinc-50">
+            I was living the problem
+          </h2>
+          <div className="mt-4 space-y-3 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+            <p>
+              Job threads, sales follow-ups, family promises — I kept losing track of
+              <em> who said what by when</em> across chats and calls.
+            </p>
+            <p>
+              Generic AI notes dump everything. I needed something narrower:
+              a ledger of commitments only. So I built Echo Ledger — the product I open every morning.
+            </p>
+            <p>
+              I'm the founder. This is the first public version: free to try, Pro when you're ready.
+            </p>
+          </div>
+          <p className="mt-5 text-xs font-semibold text-violet-600 dark:text-violet-400">
             — Founder, Echo Ledger
           </p>
         </section>
 
-        <section className="mx-auto mt-12 max-w-xl text-center">
-          <p className="text-sm text-zinc-500">
-            Free: 5 extractions / month · 1 MB files ·{" "}
-            <Link href="/pricing" className="font-semibold text-indigo-600 hover:underline">
-              See Pro
-            </Link>
+        {/* Waitlist */}
+        <section className="mx-auto mt-16 max-w-lg text-center">
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+            Want Pro features & reminders first?
+          </h2>
+          <p className="mt-2 text-sm text-zinc-500">
+            Join the waitlist for early access to email nudges, calendar export, and team ledgers.
           </p>
+          <div className="mt-5">
+            <WaitlistForm />
+          </div>
+        </section>
+
+        {/* Pricing teaser */}
+        <section className="mx-auto mt-16 max-w-xl rounded-3xl border border-white/60 bg-white/70 p-6 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70">
+          <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Simple pricing</p>
+          <p className="mt-2 text-xs text-zinc-500">
+            <span className="font-semibold text-zinc-700 dark:text-zinc-300">Free</span> — 5 extractions/mo · 1 MB
+            {" · "}
+            <span className="font-semibold text-zinc-700 dark:text-zinc-300">Pro ₹399/mo</span> — unlimited · 25 MB
+          </p>
+          <Link
+            href="/pricing"
+            className="mt-4 inline-block text-xs font-bold text-indigo-600 hover:underline"
+          >
+            See full pricing →
+          </Link>
         </section>
       </main>
 
@@ -117,7 +186,10 @@ export default function LandingPage() {
         <span className="bg-gradient-to-r from-indigo-500 to-fuchsia-500 bg-clip-text font-medium text-transparent">
           Echo Ledger
         </span>
-        {" · Keep every promise in sight"}
+        {" · Keep every promise in sight · "}
+        <Link href="/app" className="hover:text-indigo-500">
+          Open app
+        </Link>
       </footer>
     </div>
   );
