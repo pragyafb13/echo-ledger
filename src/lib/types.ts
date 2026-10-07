@@ -63,7 +63,7 @@ export const PASSES: Record<
 > = {
   day: { label: "24 hours", priceInr: 49, hours: 24, blurb: "One busy call day" },
   month: { label: "Monthly", priceInr: 399, hours: 24 * 30, blurb: "30 days of unlimited" },
-  year: { label: "Yearly", priceInr: 3499, hours: 24 * 365, blurb: "Save ₹1,289 vs monthly" },
+  year: { label: "Yearly", priceInr: 1499, hours: 24 * 365, blurb: "Save ₹3,289 vs monthly" },
 };
 
 export const DAY_PASS_PRICE_INR = PASSES.day.priceInr;

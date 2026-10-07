@@ -133,7 +133,7 @@ export default function LandingPage() {
           <p className="mt-2 text-xs text-zinc-500">
             <span className="font-semibold text-zinc-700 dark:text-zinc-300">Free</span> — 5 extractions/mo · 1 MB
             {" · "}
-            <span className="font-semibold text-zinc-700 dark:text-zinc-300">Premium</span> — ₹49 / day · ₹399 / month · ₹3,499 / year
+            <span className="font-semibold text-zinc-700 dark:text-zinc-300">Premium</span> — ₹49 / day · ₹399 / month · ₹1,499 / year
           </p>
           <Link href="/pricing" className="mt-4 inline-block text-xs font-bold text-indigo-600 transition hover:underline">See full pricing →</Link>
         </section>
