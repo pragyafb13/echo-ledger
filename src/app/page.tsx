@@ -36,17 +36,10 @@ function IconSparkles({ className }: { className?: string }) {
     </svg>
   );
 }
-function IconAlert({ className }: { className?: string }) {
+function IconInbox({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  );
-}
-function IconFilter({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
     </svg>
   );
 }
@@ -118,95 +111,131 @@ export default function Home() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-zinc-950">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-zinc-900">
-      <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 sm:px-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950">
+      {/* Ambient top glow */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-indigo-50/80 to-transparent dark:from-indigo-950/30" />
+
+      <header className="sticky top-0 z-20 border-b border-zinc-200/70 bg-white/80 backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/80">
+        <div className="relative mx-auto flex max-w-2xl items-center justify-between px-4 py-3.5 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
-              <IconBook className="h-5 w-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-200/50 dark:shadow-none">
+              <IconBook className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+              <h1 className="text-[15px] font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
                 Echo Ledger
               </h1>
-              <p className="text-xs text-zinc-500">Commitments, tracked.</p>
+              <p className="text-[11px] leading-none text-zinc-500">Commitments, tracked</p>
             </div>
           </div>
 
           {items.length > 0 && (
             <button
               onClick={handleClear}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-red-600 dark:hover:bg-zinc-800"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
             >
               <IconTrash className="h-3.5 w-3.5" />
-              Clear all
+              Clear
             </button>
           )}
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-        <section className="mb-10">
-          <div className="mb-6 text-center">
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
-              Turn voice into tracked promises
-            </h2>
-            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              Upload a call or voice memo. Echo Ledger extracts who committed to what — and by when.
-            </p>
-          </div>
-
-          <UploadPanel onProcessed={handleProcessed} />
-
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-            <IconSparkles className="h-3.5 w-3.5" />
-            Demo mode works without a key — set OPENAI_API_KEY for real Whisper + GPT extraction
+      <main className="relative mx-auto max-w-2xl px-4 py-8 sm:px-6">
+        {/* Hero */}
+        <section className="mb-8 text-center">
+          <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-[28px]">
+            Turn voice into tracked promises
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
+            Upload a call or voice memo. Echo extracts who committed to what — and by when.
           </p>
         </section>
 
+        {/* Upload */}
+        <section className="mb-8">
+          <UploadPanel onProcessed={handleProcessed} />
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-500">
+            <IconSparkles className="h-3 w-3" />
+            Demo mode works without a key · set OPENAI_API_KEY for real extraction
+          </p>
+        </section>
+
+        {/* Stats + filters */}
         {items.length > 0 && (
-          <div className="mb-5 flex flex-wrap items-center gap-2">
-            <IconFilter className="h-4 w-4 text-zinc-400" />
-            {(
-              [
-                ["all", "All"],
-                ["waiting", "Waiting"],
-                ["overdue", "Overdue"],
-                ["fulfilled", "Fulfilled"],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setFilter(key)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                  filter === key
-                    ? "bg-indigo-600 text-white"
-                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                )}
-              >
-                {label}
-                <span className="ml-1.5 opacity-70">{counts[key]}</span>
-              </button>
-            ))}
-          </div>
+          <section className="mb-5 space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              {(
+                [
+                  { key: "waiting" as const, label: "Waiting", color: "text-amber-600 dark:text-amber-400" },
+                  { key: "overdue" as const, label: "Overdue", color: "text-red-600 dark:text-red-400" },
+                  { key: "fulfilled" as const, label: "Done", color: "text-emerald-600 dark:text-emerald-400" },
+                ] as const
+              ).map(({ key, label, color }) => (
+                <button
+                  key={key}
+                  onClick={() => setFilter(filter === key ? "all" : key)}
+                  className={cn(
+                    "rounded-xl border bg-white px-3 py-3 text-center transition dark:bg-zinc-900 dark:border-zinc-800",
+                    filter === key
+                      ? "border-indigo-300 ring-2 ring-indigo-100 dark:border-indigo-700 dark:ring-indigo-950"
+                      : "border-zinc-150 hover:border-zinc-300 dark:hover:border-zinc-700"
+                  )}
+                >
+                  <div className={cn("text-xl font-bold tabular-nums", color)}>{counts[key]}</div>
+                  <div className="mt-0.5 text-[11px] font-medium text-zinc-500">{label}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(
+                [
+                  ["all", "All"],
+                  ["waiting", "Waiting"],
+                  ["overdue", "Overdue"],
+                  ["fulfilled", "Fulfilled"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setFilter(key)}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-semibold transition",
+                    filter === key
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      : "bg-white text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                  )}
+                >
+                  {label}
+                  <span className="ml-1 opacity-60">{counts[key]}</span>
+                </button>
+              ))}
+            </div>
+          </section>
         )}
 
+        {/* List */}
         <section className="space-y-3">
           {filtered.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-zinc-200 py-16 text-center dark:border-zinc-700">
+            <div className="rounded-2xl border border-dashed border-zinc-200 bg-white/60 py-16 text-center dark:border-zinc-800 dark:bg-zinc-900/40">
               {items.length === 0 ? (
                 <>
-                  <IconAlert className="mx-auto mb-3 h-8 w-8 text-zinc-300" />
-                  <p className="text-sm text-zinc-500">
-                    No commitments yet. Upload a recording to get started.
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-400 dark:bg-zinc-800">
+                    <IconInbox className="h-6 w-6" />
+                  </div>
+                  <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+                    No commitments yet
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-400">
+                    Upload a recording above to get started
                   </p>
                 </>
               ) : (
@@ -214,19 +243,24 @@ export default function Home() {
               )}
             </div>
           ) : (
-            filtered.map((item) => (
-              <CommitmentCard
+            filtered.map((item, i) => (
+              <div
                 key={item.id}
-                item={item}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-              />
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${Math.min(i * 40, 200)}ms` }}
+              >
+                <CommitmentCard
+                  item={item}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDelete}
+                />
+              </div>
             ))
           )}
         </section>
       </main>
 
-      <footer className="border-t border-zinc-100 py-6 text-center text-xs text-zinc-400 dark:border-zinc-800">
+      <footer className="border-t border-zinc-100 py-8 text-center text-[11px] text-zinc-400 dark:border-zinc-900">
         Echo Ledger · Keep every promise in sight
       </footer>
     </div>
