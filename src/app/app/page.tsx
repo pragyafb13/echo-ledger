@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { Commitment, CommitmentStatus, Session } from "@/lib/types";
+import { Commitment, CommitmentStatus, Plan, Session } from "@/lib/types";
 import {
   loadCommitments,
   addCommitments,
@@ -35,7 +35,13 @@ export default function AppPage() {
   const [filter, setFilter] = useState<FilterKey>("today");
   const [mounted, setMounted] = useState(false);
   const [session, setSessionState] = useState<Session | null>(null);
-  const [usage, setUsage] = useState({ used: 0, limit: 5, remaining: 5, plan: "free" as const, maxFileBytes: 1024 * 1024 });
+  const [usage, setUsage] = useState({
+    used: 0,
+    limit: 5,
+    remaining: 5,
+    plan: "free" as Plan,
+    maxFileBytes: 1024 * 1024,
+  });
   const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ person: "", commitment: "", deadline: "" });
 
@@ -92,23 +98,20 @@ export default function AppPage() {
     [refreshUsage]
   );
 
-  const handleBeforeUpload = useCallback(
-    (sizeBytes: number): boolean => {
-      const email = getSession()?.email ?? null;
-      const fileGate = canUploadFile(email, sizeBytes);
-      if (!fileGate.ok) {
-        alert(fileGate.error);
-        return false;
-      }
-      const extractGate = canExtract(email);
-      if (!extractGate.ok) {
-        alert(extractGate.error);
-        return false;
-      }
-      return true;
-    },
-    []
-  );
+  const handleBeforeUpload = useCallback((sizeBytes: number): boolean => {
+    const email = getSession()?.email ?? null;
+    const fileGate = canUploadFile(email, sizeBytes);
+    if (!fileGate.ok) {
+      alert(fileGate.error);
+      return false;
+    }
+    const extractGate = canExtract(email);
+    if (!extractGate.ok) {
+      alert(extractGate.error);
+      return false;
+    }
+    return true;
+  }, []);
 
   const handleUpdate = useCallback(
     (id: string, status: CommitmentStatus) => {
@@ -249,7 +252,6 @@ export default function AppPage() {
       </header>
 
       <main className="relative mx-auto max-w-2xl px-4 py-6 sm:px-6">
-        {/* Today briefing */}
         <section className="mb-6 rounded-2xl border border-indigo-100 bg-white/80 p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80">
           <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Good morning briefing</h2>
           <p className="mt-1 text-xs text-zinc-500">
@@ -266,7 +268,7 @@ export default function AppPage() {
             <div
               className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 transition-all"
               style={{
-                width: `${usage.plan === "pro" ? 100 : Math.min(100, (usage.used / usage.limit) * 100)}%`,
+                width: `${usage.plan === "pro" ? 100 : Math.min(100, (usage.used / Math.max(usage.limit, 1)) * 100)}%`,
               }}
             />
           </div>
@@ -277,12 +279,10 @@ export default function AppPage() {
           </p>
         </section>
 
-        {/* Capture */}
         <section className="mb-4">
           <UploadPanel onProcessed={handleProcessed} onBeforeUpload={handleBeforeUpload} />
         </section>
 
-        {/* Manual add */}
         <section className="mb-6">
           {!showManual ? (
             <button
@@ -332,7 +332,6 @@ export default function AppPage() {
           )}
         </section>
 
-        {/* Filters */}
         {items.length > 0 && (
           <section className="mb-4 flex flex-wrap gap-1.5">
             {(
@@ -361,16 +360,13 @@ export default function AppPage() {
           </section>
         )}
 
-        {/* List */}
         <section className="space-y-3">
           {filtered.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-indigo-200/60 bg-white/50 py-14 text-center dark:border-indigo-900/40 dark:bg-zinc-900/40">
               <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">
                 {items.length === 0 ? "No commitments yet" : "Nothing in this view"}
               </p>
-              <p className="mt-1 text-xs text-zinc-400">
-                Upload audio, paste text, or add manually
-              </p>
+              <p className="mt-1 text-xs text-zinc-400">Upload audio, paste text, or add manually</p>
             </div>
           ) : (
             filtered.map((item) => (
