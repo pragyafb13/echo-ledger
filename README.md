@@ -1,94 +1,52 @@
 # Echo Ledger
 
-**Turn voice into tracked promises.**
+**Never lose a promise again.**
 
-Upload a call recording or voice memo → Whisper transcribes it → GPT extracts structured commitments (who, what, by when) → you get a colorful tracker with status, overdue detection, and one-click mark-done.
+Turn calls, voice notes, and chat into tracked commitments — who promised what, by when.
 
-## Why it exists
+## Live
 
-Generic meeting-notes tools dump everything. Echo Ledger only cares about **who committed to what, by when** — the exact lens you need when following up on jobs, sales, freelancing, or family promises.
+https://echo-ledger.vercel.app
 
-## Live demo
+## Product
 
-Deployed on Vercel from this repo. Works in **demo mode** without an API key.
+| Surface | URL |
+|---------|-----|
+| Landing (founder story) | `/` |
+| App (Today + capture) | `/app` |
+| Register / Login | `/register` · `/login` |
+| Pricing | `/pricing` |
 
-## Quick start (local)
+### Free plan
+- 5 extractions / month
+- 1 MB max audio file
+- Paste transcript
+- Today view + manual add
+
+### Pro (₹399/mo demo unlock)
+- Unlimited extractions
+- 25 MB files
+- Same features + early access path
+
+> Auth & usage are client-side (localStorage) for the MVP business layer. Migrate to Clerk/Supabase + Stripe when you're ready for real multi-device accounts.
+
+## Stack
+
+- Next.js 15 · Tailwind · Groq (free Whisper + LLM) · localStorage accounts
+
+## Env
+
+```
+GROQ_API_KEY=gsk_...   # free: console.groq.com
+```
+
+## Local
 
 ```bash
-git clone https://github.com/pragyafb13/echo-ledger.git
-cd echo-ledger
-cp .env.example .env.local
-# optional: paste OPENAI_API_KEY into .env.local
-
 npm install
 npm run dev
 ```
 
-Open http://localhost:3000
+## Founder note
 
-### Demo mode
-Without `OPENAI_API_KEY` the app uses a realistic sample transcript + extraction so you can try the full UI immediately.
-
-### Real mode
-Add your key in `.env.local` (local) or Vercel → Project → Settings → Environment Variables:
-
-```
-OPENAI_API_KEY=sk-...
-```
-
-Then:
-1. **Whisper-1** transcribes any audio you upload or record
-2. **GPT-4o-mini** extracts commitments as structured JSON
-
-## Deploy on Vercel
-
-1. Go to [vercel.com/new](https://vercel.com/new)
-2. Import `pragyafb13/echo-ledger`
-3. (Optional) Add `OPENAI_API_KEY` under Environment Variables
-4. Click **Deploy**
-
-Redeploy with **Use existing Build Cache** turned **off** after big dependency changes.
-
-## Stack
-
-- Next.js 16 (App Router)
-- Tailwind CSS 3 + PostCSS
-- OpenAI Whisper + GPT-4o-mini
-- LocalStorage persistence (no DB for MVP)
-
-## Features
-
-- Drag-and-drop audio upload + live mic recording
-- Automatic commitment extraction (person, promise, deadline, context)
-- Casual deadline parsing (`by Saturday`, `end of the week`, `couple of days`…)
-- Status tracking: Waiting · Overdue · Fulfilled · Cancelled
-- Auto-flip to Overdue when a deadline passes
-- Colorful gradient UI with motion
-
-## Project structure
-
-```
-src/
-  app/
-    api/transcribe/route.ts   # Whisper
-    api/extract/route.ts      # Commitment extraction
-    page.tsx                  # Main UI
-  components/
-    UploadPanel.tsx           # Drag-drop + live record
-    CommitmentCard.tsx        # Status, actions
-  lib/
-    types.ts
-    storage.ts                # localStorage helpers
-    utils.ts                  # deadline parsing, status colors
-```
-
-## Roadmap ideas
-
-- Browser notifications when a deadline passes
-- WhatsApp / email forward-in
-- Multi-user / team ledgers
-- Export to Notion / Linear
-
----
-
-Built with the spirit of removing daily friction.
+Built because tracking who-said-what-by-when across job threads and calls was chaos. Echo Ledger is a commitment OS — not another meeting-notes dump.
