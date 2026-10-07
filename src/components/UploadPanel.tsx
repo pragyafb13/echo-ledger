@@ -9,6 +9,8 @@ interface Props {
   disabled?: boolean;
 }
 
+type Tab = "audio" | "paste";
+
 function IconMic({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -45,15 +47,98 @@ function IconSquare({ className }: { className?: string }) {
     </svg>
   );
 }
+function IconText({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
 
 export function UploadPanel({ onProcessed, disabled }: Props) {
+  const [tab, setTab] = useState<Tab>("audio");
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [pasteText, setPasteText] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const buildCommitments = useCallback(
+    (
+      result: {
+        commitments?: {
+          person: string;
+          commitment: string;
+          deadline: string | null;
+          context: string;
+        }[];
+      },
+      sourceName: string
+    ): Commitment[] => {
+      const now = new Date().toISOString();
+      return (result.commitments || []).map((c) => {
+        const deadlineDate = parseDeadline(c.deadline);
+        let status: CommitmentStatus = "waiting";
+        if (deadlineDate) {
+          const days = Math.round(
+            (new Date(deadlineDate).getTime() - Date.now()) / 86400000
+          );
+          if (days < 0) status = "overdue";
+        }
+        return {
+          id: crypto.randomUUID(),
+          person: c.person,
+          commitment: c.commitment,
+          deadline: c.deadline,
+          deadlineDate,
+          context: c.context,
+          source: sourceName,
+          status,
+          createdAt: now,
+          updatedAt: now,
+        };
+      });
+    },
+    []
+  );
+
+  const extractFromTranscript = useCallback(
+    async (transcript: string, sourceName: string) => {
+      setIsProcessing(true);
+      setStatus("Extracting commitments…");
+      try {
+        const extractRes = await fetch("/api/extract", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transcript }),
+        });
+        if (!extractRes.ok) {
+          const err = await extractRes.json();
+          throw new Error(err.error || "Extraction failed");
+        }
+        const { result, demo } = await extractRes.json();
+        if (demo) setStatus("Demo mode — extracting…");
+        const commitments = buildCommitments(result, sourceName);
+        onProcessed(commitments);
+        setStatus(
+          commitments.length
+            ? `Extracted ${commitments.length} commitment${commitments.length > 1 ? "s" : ""}`
+            : "No clear commitments found"
+        );
+        if (sourceName === "pasted-transcript") setPasteText("");
+      } catch (err) {
+        console.error(err);
+        setStatus(err instanceof Error ? err.message : "Something went wrong");
+      } finally {
+        setIsProcessing(false);
+        setTimeout(() => setStatus(null), 4000);
+      }
+    },
+    [buildCommitments, onProcessed]
+  );
 
   const processAudio = useCallback(
     async (file: File | Blob, sourceName: string) => {
@@ -89,38 +174,7 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
         }
 
         const { result } = await extractRes.json();
-        const now = new Date().toISOString();
-
-        const commitments: Commitment[] = (result.commitments || []).map(
-          (c: {
-            person: string;
-            commitment: string;
-            deadline: string | null;
-            context: string;
-          }) => {
-            const deadlineDate = parseDeadline(c.deadline);
-            let status: CommitmentStatus = "waiting";
-            if (deadlineDate) {
-              const days = Math.round(
-                (new Date(deadlineDate).getTime() - Date.now()) / 86400000
-              );
-              if (days < 0) status = "overdue";
-            }
-            return {
-              id: crypto.randomUUID(),
-              person: c.person,
-              commitment: c.commitment,
-              deadline: c.deadline,
-              deadlineDate,
-              context: c.context,
-              source: sourceName,
-              status,
-              createdAt: now,
-              updatedAt: now,
-            };
-          }
-        );
-
+        const commitments = buildCommitments(result, sourceName);
         onProcessed(commitments);
         setStatus(
           commitments.length
@@ -135,7 +189,7 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
         setTimeout(() => setStatus(null), 4000);
       }
     },
-    [onProcessed]
+    [buildCommitments, onProcessed]
   );
 
   const handleDrop = useCallback(
@@ -188,101 +242,192 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
     setIsRecording(false);
   };
 
+  const handlePasteSubmit = () => {
+    const text = pasteText.trim();
+    if (!text) {
+      setStatus("Paste some text first");
+      return;
+    }
+    extractFromTranscript(text, "pasted-transcript");
+  };
+
   return (
     <div className="space-y-3">
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setIsDragging(true);
-        }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-        className={cn(
-          "relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed p-8 transition-all duration-300 sm:p-10",
-          isDragging
-            ? "scale-[1.02] border-indigo-400 bg-gradient-to-br from-indigo-100 via-violet-50 to-fuchsia-100 shadow-lg shadow-indigo-200/40 dark:from-indigo-950/50 dark:via-violet-950/30 dark:to-fuchsia-950/30"
-            : isRecording
-            ? "border-red-300 bg-gradient-to-br from-red-50 to-rose-50 dark:border-red-800 dark:from-red-950/30 dark:to-rose-950/20"
-            : "border-indigo-200/70 bg-gradient-to-br from-white via-indigo-50/40 to-violet-50/40 hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-100/50 dark:border-indigo-800/50 dark:from-zinc-900/80 dark:via-indigo-950/20 dark:to-violet-950/20 dark:hover:border-indigo-700",
-          (disabled || isProcessing) && "pointer-events-none opacity-60"
-        )}
-      >
-        {/* subtle inner glow */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/40 dark:to-transparent" />
-
-        {isProcessing ? (
-          <div className="relative flex flex-col items-center gap-3 py-4">
-            <div className="relative">
-              <div className="absolute inset-0 animate-ping rounded-full bg-indigo-400/30" />
-              <IconLoader className="relative h-11 w-11 animate-spin text-indigo-500" />
-            </div>
-            <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-              {status || "Processing…"}
-            </p>
-            <p className="text-xs text-zinc-400">This usually takes a few seconds</p>
-          </div>
-        ) : (
-          <div className="relative">
-            <div
-              className={cn(
-                "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl shadow-md transition-transform",
-                isRecording
-                  ? "bg-gradient-to-br from-red-400 to-rose-500 text-white animate-pulse-ring shadow-red-200"
-                  : "bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-indigo-200/50 animate-float dark:shadow-none"
-              )}
-            >
-              {isRecording ? <IconMic className="h-8 w-8" /> : <IconWave className="h-8 w-8" />}
-            </div>
-
-            <p className="text-center text-base font-bold text-zinc-800 dark:text-zinc-100">
-              {isRecording ? "Recording in progress…" : "Drop a voice memo or call"}
-            </p>
-            <p className="mt-1 text-center text-sm text-zinc-500 dark:text-zinc-400">
-              {isRecording
-                ? "Tap stop when you're done"
-                : "MP3, WAV, WEBM, M4A — or record live"}
-            </p>
-
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              {!isRecording && (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-200/50 transition hover:scale-[1.03] hover:shadow-xl active:scale-[0.98] dark:shadow-indigo-900/30"
-                >
-                  <IconUpload className="h-4 w-4" />
-                  Upload file
-                </button>
-              )}
-
-              {!isRecording ? (
-                <button
-                  onClick={startRecording}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white/90 px-5 py-2.5 text-sm font-bold text-indigo-700 shadow-sm backdrop-blur transition hover:scale-[1.03] hover:bg-white active:scale-[0.98] dark:border-indigo-700 dark:bg-zinc-800/90 dark:text-indigo-300 dark:hover:bg-zinc-800"
-                >
-                  <IconMic className="h-4 w-4" />
-                  Record
-                </button>
-              ) : (
-                <button
-                  onClick={stopRecording}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-red-500 to-rose-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-200/40 transition hover:scale-[1.03] active:scale-[0.98]"
-                >
-                  <IconSquare className="h-4 w-4" />
-                  Stop recording
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="audio/*"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
+      {/* Tabs */}
+      <div className="flex gap-1 rounded-2xl bg-white/60 p-1 shadow-sm backdrop-blur dark:bg-zinc-900/60">
+        <button
+          onClick={() => setTab("audio")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition",
+            tab === "audio"
+              ? "bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow"
+              : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+          )}
+        >
+          <IconWave className="h-3.5 w-3.5" />
+          Audio
+        </button>
+        <button
+          onClick={() => setTab("paste")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition",
+            tab === "paste"
+              ? "bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow"
+              : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+          )}
+        >
+          <IconText className="h-3.5 w-3.5" />
+          Paste text
+        </button>
       </div>
+
+      {tab === "audio" ? (
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          className={cn(
+            "relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed p-8 transition-all duration-300 sm:p-10",
+            isDragging
+              ? "scale-[1.02] border-indigo-400 bg-gradient-to-br from-indigo-100 via-violet-50 to-fuchsia-100 shadow-lg shadow-indigo-200/40 dark:from-indigo-950/50 dark:via-violet-950/30 dark:to-fuchsia-950/30"
+              : isRecording
+              ? "border-red-300 bg-gradient-to-br from-red-50 to-rose-50 dark:border-red-800 dark:from-red-950/30 dark:to-rose-950/20"
+              : "border-indigo-200/70 bg-gradient-to-br from-white via-indigo-50/40 to-violet-50/40 hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-100/50 dark:border-indigo-800/50 dark:from-zinc-900/80 dark:via-indigo-950/20 dark:to-violet-950/20 dark:hover:border-indigo-700",
+            (disabled || isProcessing) && "pointer-events-none opacity-60"
+          )}
+        >
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/40 dark:to-transparent" />
+
+          {isProcessing ? (
+            <div className="relative flex flex-col items-center gap-3 py-4">
+              <div className="relative">
+                <div className="absolute inset-0 animate-ping rounded-full bg-indigo-400/30" />
+                <IconLoader className="relative h-11 w-11 animate-spin text-indigo-500" />
+              </div>
+              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                {status || "Processing…"}
+              </p>
+              <p className="text-xs text-zinc-400">This usually takes a few seconds</p>
+            </div>
+          ) : (
+            <div className="relative">
+              <div
+                className={cn(
+                  "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl shadow-md transition-transform",
+                  isRecording
+                    ? "bg-gradient-to-br from-red-400 to-rose-500 text-white animate-pulse-ring shadow-red-200"
+                    : "bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-indigo-200/50 animate-float dark:shadow-none"
+                )}
+              >
+                {isRecording ? <IconMic className="h-8 w-8" /> : <IconWave className="h-8 w-8" />}
+              </div>
+
+              <p className="text-center text-base font-bold text-zinc-800 dark:text-zinc-100">
+                {isRecording ? "Recording in progress…" : "Drop a voice memo or call"}
+              </p>
+              <p className="mt-1 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                {isRecording
+                  ? "Tap stop when you're done"
+                  : "MP3, WAV, WEBM, M4A — or record live"}
+              </p>
+
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                {!isRecording && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-200/50 transition hover:scale-[1.03] hover:shadow-xl active:scale-[0.98] dark:shadow-indigo-900/30"
+                  >
+                    <IconUpload className="h-4 w-4" />
+                    Upload file
+                  </button>
+                )}
+
+                {!isRecording ? (
+                  <button
+                    onClick={startRecording}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white/90 px-5 py-2.5 text-sm font-bold text-indigo-700 shadow-sm backdrop-blur transition hover:scale-[1.03] hover:bg-white active:scale-[0.98] dark:border-indigo-700 dark:bg-zinc-800/90 dark:text-indigo-300 dark:hover:bg-zinc-800"
+                  >
+                    <IconMic className="h-4 w-4" />
+                    Record
+                  </button>
+                ) : (
+                  <button
+                    onClick={stopRecording}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-red-500 to-rose-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-200/40 transition hover:scale-[1.03] active:scale-[0.98]"
+                  >
+                    <IconSquare className="h-4 w-4" />
+                    Stop recording
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+        </div>
+      ) : (
+        /* Paste transcript tab */
+        <div
+          className={cn(
+            "rounded-3xl border-2 border-indigo-200/70 bg-gradient-to-br from-white via-indigo-50/40 to-violet-50/40 p-5 dark:border-indigo-800/50 dark:from-zinc-900/80 dark:via-indigo-950/20 dark:to-violet-950/20",
+            (disabled || isProcessing) && "pointer-events-none opacity-60"
+          )}
+        >
+          {isProcessing ? (
+            <div className="flex flex-col items-center gap-3 py-10">
+              <div className="relative">
+                <div className="absolute inset-0 animate-ping rounded-full bg-indigo-400/30" />
+                <IconLoader className="relative h-11 w-11 animate-spin text-indigo-500" />
+              </div>
+              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                {status || "Extracting…"}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white">
+                  <IconText className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100">
+                    Paste a transcript
+                  </p>
+                  <p className="text-[11px] text-zinc-500">
+                    Call notes, chat logs, email — anything with promises
+                  </p>
+                </div>
+              </div>
+
+              <textarea
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder={`Example:\nCapt. Shakil said he'll review the docs by Saturday.\nPravash will send the spreadsheet end of the week.`}\n                rows={6}
+                className="w-full resize-y rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3 text-sm leading-relaxed text-zinc-800 placeholder:text-zinc-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-indigo-900"
+              />
+
+              <div className="mt-3 flex justify-end">
+                <button
+                  onClick={handlePasteSubmit}
+                  disabled={!pasteText.trim()}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-200/50 transition hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 dark:shadow-indigo-900/30"
+                >
+                  Extract commitments
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {status && !isProcessing && (
         <p
