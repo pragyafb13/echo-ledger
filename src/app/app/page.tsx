@@ -20,6 +20,7 @@ import {
 } from "@/lib/auth";
 import { UploadPanel } from "@/components/UploadPanel";
 import { CommitmentCard } from "@/components/CommitmentCard";
+import { WeekStrip } from "@/components/WeekStrip";
 import { cn, daysUntil, parseDeadline } from "@/lib/utils";
 
 type FilterKey = "today" | "all" | "waiting" | "overdue" | "fulfilled";
@@ -44,6 +45,7 @@ export default function AppPage() {
   });
   const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ person: "", commitment: "", deadline: "" });
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const refreshUsage = useCallback(() => {
     const s = getSession();
@@ -170,7 +172,18 @@ export default function AppPage() {
     refreshUsage();
   };
 
+  const handleSelectDay = (iso: string) => {
+    setSelectedDate((prev) => (prev === iso ? null : iso));
+    setFilter("all");
+  };
+
   const filtered = items.filter((c) => {
+    if (selectedDate) {
+      return (
+        (c.status === "waiting" || c.status === "overdue") &&
+        c.deadlineDate === selectedDate
+      );
+    }
     if (filter === "all") return true;
     if (filter === "today") {
       return c.status === "overdue" || isDueToday(c) || (c.status === "waiting" && !c.deadlineDate);
@@ -279,6 +292,13 @@ export default function AppPage() {
           </p>
         </section>
 
+        {/* Week planner strip */}
+        <WeekStrip
+          items={items}
+          selectedDate={selectedDate}
+          onSelectDay={handleSelectDay}
+        />
+
         <section className="mb-4">
           <UploadPanel onProcessed={handleProcessed} onBeforeUpload={handleBeforeUpload} />
         </section>
@@ -345,10 +365,13 @@ export default function AppPage() {
             ).map(([key, label]) => (
               <button
                 key={key}
-                onClick={() => setFilter(key)}
+                onClick={() => {
+                  setFilter(key);
+                  setSelectedDate(null);
+                }}
                 className={cn(
                   "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-                  filter === key
+                  filter === key && !selectedDate
                     ? "bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow"
                     : "bg-white/80 text-zinc-500 dark:bg-zinc-900/80 dark:text-zinc-400"
                 )}
