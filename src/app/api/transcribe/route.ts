@@ -32,16 +32,32 @@ export async function POST(req: NextRequest) {
         apiKey: groqKey,
         baseURL: "https://api.groq.com/openai/v1",
       });
-      const transcription = await groq.audio.transcriptions.create({
-        file: audioFile,
-        model: "whisper-large-v3",
-        response_format: "text",
-      });
-      return NextResponse.json({
-        text: transcription,
-        demo: false,
-        provider: "groq",
-      });
+
+      const modelsToTry = ["whisper-large-v3-turbo", "whisper-large-v3"];
+      let lastError: unknown = null;
+
+      for (const model of modelsToTry) {
+        try {
+          const transcription = await groq.audio.transcriptions.create({
+            file: audioFile,
+            model,
+            response_format: "text",
+          });
+          return NextResponse.json({
+            text: transcription,
+            demo: false,
+            provider: "groq",
+            model,
+          });
+        } catch (err) {
+          lastError = err;
+          console.warn(`Groq whisper ${model} failed:`, err);
+        }
+      }
+
+      const message =
+        lastError instanceof Error ? lastError.message : "Groq transcription failed";
+      return NextResponse.json({ error: message }, { status: 500 });
     }
 
     // Fallback: OpenAI Whisper
