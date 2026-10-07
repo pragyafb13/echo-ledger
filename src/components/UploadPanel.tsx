@@ -119,8 +119,7 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
           const err = await extractRes.json();
           throw new Error(err.error || "Extraction failed");
         }
-        const { result, demo } = await extractRes.json();
-        if (demo) setStatus("Demo mode — extracting…");
+        const { result } = await extractRes.json();
         const commitments = buildCommitments(result, sourceName);
         onProcessed(commitments);
         setStatus(
@@ -253,7 +252,6 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Tabs */}
       <div className="flex gap-1 rounded-2xl bg-white/60 p-1 shadow-sm backdrop-blur dark:bg-zinc-900/60">
         <button
           onClick={() => setTab("audio")}
@@ -375,7 +373,6 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
           />
         </div>
       ) : (
-        /* Paste transcript tab */
         <div
           className={cn(
             "rounded-3xl border-2 border-indigo-200/70 bg-gradient-to-br from-white via-indigo-50/40 to-violet-50/40 p-5 dark:border-indigo-800/50 dark:from-zinc-900/80 dark:via-indigo-950/20 dark:to-violet-950/20",
@@ -411,7 +408,8 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
               <textarea
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
-                placeholder={`Example:\nCapt. Shakil said he'll review the docs by Saturday.\nPravash will send the spreadsheet end of the week.`}\n                rows={6}
+                placeholder="Example: Capt. Shakil said he will review the docs by Saturday. Pravash will send the spreadsheet end of the week."
+                rows={6}
                 className="w-full resize-y rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3 text-sm leading-relaxed text-zinc-800 placeholder:text-zinc-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-indigo-900"
               />
 
