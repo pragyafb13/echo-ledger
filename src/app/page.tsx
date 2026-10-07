@@ -66,20 +66,26 @@ export default function LandingPage() {
           <p className="mt-4 text-[11px] text-zinc-400">
             No monthly bill · Day pass expires on its own · Add to home screen on iPhone or Android
           </p>
+          <div className="mx-auto mt-10 max-w-xl overflow-hidden rounded-[2rem] border border-white/70 bg-white/70 shadow-2xl shadow-indigo-500/20">
+            <img src="/hero-ledger.jpg" alt="Echo Ledger today view with waiting promises" className="w-full" />
+          </div>
         </section>
 
         <section className="mx-auto mt-20 max-w-4xl">
           <h2 className="text-center text-lg font-bold text-zinc-900 dark:text-zinc-50">How it works</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {[
-              { step: "1", title: "Capture", body: "Upload a call, record a voice memo, or paste a transcript / chat." },
-              { step: "2", title: "Extract", body: "AI pulls only real commitments — person, promise, deadline." },
-              { step: "3", title: "Follow through", body: "Today view + week strip. Mark done, track overdue, stay clear." },
+              { step: "1", title: "Capture", body: "Upload a call, record a voice memo, or paste a transcript / chat.", image: "/step-capture.jpg" },
+              { step: "2", title: "Extract", body: "AI pulls only real commitments — person, promise, deadline.", image: "/step-extract.jpg" },
+              { step: "3", title: "Follow through", body: "Today view + week strip. Mark done, track overdue, stay clear.", image: "/step-follow.jpg" },
             ].map((s) => (
-              <div key={s.step} className="group rounded-2xl border border-white/60 bg-white/80 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/80">
-                <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white shadow-md shadow-indigo-500/30 transition group-hover:scale-110">{s.step}</div>
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">{s.title}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{s.body}</p>
+              <div key={s.step} className="group overflow-hidden rounded-2xl border border-white/60 bg-white/80 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900/80">
+                <img src={s.image} alt="" className="h-36 w-full object-cover" />
+                <div className="p-5">
+                  <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-xs font-bold text-white shadow-md shadow-indigo-500/30 transition group-hover:scale-110">{s.step}</div>
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">{s.title}</h3>
+                  <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{s.body}</p>
+                </div>
               </div>
             ))}
           </div>
