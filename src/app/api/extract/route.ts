@@ -41,12 +41,16 @@ export async function POST(req: NextRequest) {
     const openaiKey = process.env.OPENAI_API_KEY;
 
     if (!groqKey && !openaiKey) {
-      // If transcript looks like the demo sample, return demo extraction;
-      // otherwise return empty so user sees we need a key for custom text.
       const isDemoLike =
         transcript.includes("Capt. Shakil") || transcript.length < 40;
       return NextResponse.json({
-        result: isDemoLike ? DEMO_EXTRACTION : { commitments: [], summary: "Add GROQ_API_KEY (free) or OPENAI_API_KEY to extract from custom text." },
+        result: isDemoLike
+          ? DEMO_EXTRACTION
+          : {
+              commitments: [],
+              summary:
+                "Add GROQ_API_KEY (free at console.groq.com) to extract from custom text.",
+            },
         demo: true,
         provider: "demo",
       });
@@ -54,24 +58,50 @@ export async function POST(req: NextRequest) {
 
     const { default: OpenAI } = await import("openai");
 
-    // Prefer free Groq Llama
+    // Prefer free Groq — gpt-oss-20b is available on free/developer tier
     if (groqKey) {
       const groq = new OpenAI({
         apiKey: groqKey,
         baseURL: "https://api.groq.com/openai/v1",
       });
-      const completion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
-        temperature: 0.1,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `Transcript:\n\n${transcript}` },
-        ],
-      });
-      const raw = completion.choices[0]?.message?.content || "{}";
-      const parsed = JSON.parse(raw) as ExtractionResult;
-      return NextResponse.json({ result: parsed, demo: false, provider: "groq" });
+
+      const modelsToTry = [
+        "openai/gpt-oss-20b",
+        "openai/gpt-oss-120b",
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+      ];
+
+      let lastError: unknown = null;
+      for (const model of modelsToTry) {
+        try {
+          const completion = await groq.chat.completions.create({
+            model,
+            temperature: 0.1,
+            response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: SYSTEM_PROMPT },
+              { role: "user", content: `Transcript:\n\n${transcript}` },
+            ],
+          });
+          const raw = completion.choices[0]?.message?.content || "{}";
+          const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+          const parsed = JSON.parse(cleaned) as ExtractionResult;
+          return NextResponse.json({
+            result: parsed,
+            demo: false,
+            provider: "groq",
+            model,
+          });
+        } catch (err) {
+          lastError = err;
+          console.warn(`Groq model ${model} failed:`, err);
+        }
+      }
+
+      const message =
+        lastError instanceof Error ? lastError.message : "All Groq models failed";
+      return NextResponse.json({ error: message }, { status: 500 });
     }
 
     // Fallback: OpenAI
@@ -124,5 +154,6 @@ const DEMO_EXTRACTION: ExtractionResult = {
       context: "Promised the team",
     },
   ],
-  summary: "Multiple follow-ups on documents, spreadsheet, interview timing, and shortlist finalization.",
+  summary:
+    "Multiple follow-ups on documents, spreadsheet, interview timing, and shortlist finalization.",
 };
