@@ -367,7 +367,7 @@ export function UploadPanel({ onProcessed, onBeforeUpload, disabled }: Props) {
               <textarea
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
-                placeholder="Example: Capt. Shakil said he will review the docs by Saturday."
+                placeholder="Paste a call note or chat. Example: Alex said they will send the deck by Friday."
                 rows={6}
                 className="w-full resize-y rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3 text-sm dark:border-zinc-700 dark:bg-zinc-900/80"
               />

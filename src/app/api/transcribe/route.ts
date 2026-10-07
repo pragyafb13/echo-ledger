@@ -13,11 +13,13 @@ export async function POST(req: NextRequest) {
     const openaiKey = process.env.OPENAI_API_KEY;
 
     if (!groqKey && !openaiKey) {
-      return NextResponse.json({
-        text: DEMO_TRANSCRIPT,
-        demo: true,
-        provider: "demo",
-      });
+      return NextResponse.json(
+        {
+          error:
+            "Transcription is not configured yet. Add GROQ_API_KEY in Vercel, or paste the transcript instead.",
+        },
+        { status: 503 }
+      );
     }
 
     const { default: OpenAI } = await import("openai");
@@ -79,5 +81,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
-const DEMO_TRANSCRIPT = `Hey, this is Capt. Shakil. Look, about the documents you sent — I'll review them and get back to you by Saturday for sure. Pravash Dey also mentioned he'll share the updated spreadsheet by end of the week. And regarding the interview slot, HR said they'll confirm the exact time tomorrow. I promised the team I'd finalize the shortlist by Tuesday next week. Okay, talk soon.`;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { WaitlistForm } from "@/components/WaitlistForm";
-import { FOUNDER_PHOTO } from "@/lib/founder";
+import { FOUNDER_NAME, FOUNDER_PHOTO, FOUNDER_TITLE } from "@/lib/founder";
 
 export default function LandingPage() {
   return (
@@ -105,7 +105,7 @@ export default function LandingPage() {
         <section className="mx-auto mt-16 max-w-3xl overflow-hidden rounded-3xl border border-indigo-100 bg-white/90 shadow-lg shadow-indigo-500/5 dark:border-zinc-800 dark:bg-zinc-900/90">
           <div className="grid sm:grid-cols-[200px_1fr]">
             <div className="relative min-h-[260px] bg-gradient-to-b from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 sm:min-h-full">
-              <img src={FOUNDER_PHOTO} alt="Pragya Rajpurohit" className="absolute inset-0 h-full w-full object-cover object-top" />
+              <img src="/founder.jpg" alt="Pragya Rajpurohit" className="absolute inset-0 h-full w-full object-cover object-top" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-black/5" />
             </div>
             <div className="flex flex-col justify-center p-6 sm:p-8">

@@ -21,7 +21,7 @@ Return strict JSON with this shape:
 Rules:
 - Only extract commitments (promises, "I'll do X", "he'll send Y by Z").
 - Ignore pure information or opinions.
-- Keep person names as spoken (e.g. "Capt. Shakil", "Pravash Dey", "HR").
+- Keep person names exactly as spoken. Do not invent names.
 - If the speaker is the user themselves, use "Me" or the name if given.
 - deadline should be the original phrase ("by Saturday", "end of the week", "tomorrow") or null.
 - Be precise and sparse — better to miss a weak one than invent.
@@ -41,19 +41,13 @@ export async function POST(req: NextRequest) {
     const openaiKey = process.env.OPENAI_API_KEY;
 
     if (!groqKey && !openaiKey) {
-      const isDemoLike =
-        transcript.includes("Capt. Shakil") || transcript.length < 40;
-      return NextResponse.json({
-        result: isDemoLike
-          ? DEMO_EXTRACTION
-          : {
-              commitments: [],
-              summary:
-                "Add GROQ_API_KEY (free at console.groq.com) to extract from custom text.",
-            },
-        demo: true,
-        provider: "demo",
-      });
+      return NextResponse.json(
+        {
+          error:
+            "Extraction is not configured yet. Add GROQ_API_KEY in Vercel (free at console.groq.com).",
+        },
+        { status: 503 }
+      );
     }
 
     const { default: OpenAI } = await import("openai");
@@ -126,34 +120,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
-const DEMO_EXTRACTION: ExtractionResult = {
-  commitments: [
-    {
-      person: "Capt. Shakil",
-      commitment: "Review the documents and get back",
-      deadline: "by Saturday",
-      context: "About the documents that were sent",
-    },
-    {
-      person: "Pravash Dey",
-      commitment: "Share the updated spreadsheet",
-      deadline: "end of the week",
-      context: "Mentioned during the call",
-    },
-    {
-      person: "HR",
-      commitment: "Confirm the exact interview time",
-      deadline: "tomorrow",
-      context: "Regarding the interview slot",
-    },
-    {
-      person: "Me",
-      commitment: "Finalize the shortlist",
-      deadline: "by Tuesday next week",
-      context: "Promised the team",
-    },
-  ],
-  summary:
-    "Multiple follow-ups on documents, spreadsheet, interview timing, and shortlist finalization.",
-};

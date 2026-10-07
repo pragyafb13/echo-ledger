@@ -1,7 +1,7 @@
 import { Commitment } from "./types";
 import { getSession } from "./auth";
 
-const STORAGE_KEY = "echo-ledger-commitments";
+const STORAGE_KEY = "echo-ledger-commitments-v2";
 
 function scopeKey(email?: string | null) {
   return email ? `${STORAGE_KEY}:${email}` : STORAGE_KEY;
