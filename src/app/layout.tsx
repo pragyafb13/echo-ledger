@@ -12,19 +12,42 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://echo-ledger.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Echo Ledger — Track commitments from voice",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Echo Ledger — Never lose a promise again",
+    template: "%s · Echo Ledger",
+  },
   description:
-    "Upload a call or voice memo. Echo Ledger extracts who committed to what, and by when — then keeps them tracked.",
+    "Turn calls, voice notes, and chat into tracked commitments. Who promised what, by when — your daily follow-up inbox.",
+  keywords: [
+    "commitment tracker",
+    "follow-up",
+    "voice to tasks",
+    "promise ledger",
+    "Echo Ledger",
+  ],
+  authors: [{ name: "Echo Ledger" }],
   openGraph: {
-    title: "Echo Ledger",
-    description: "Turn voice into tracked promises.",
+    title: "Echo Ledger — Never lose a promise again",
+    description:
+      "Turn voice and chat into tracked commitments. Built by a founder who lived the follow-up chaos.",
+    url: siteUrl,
+    siteName: "Echo Ledger",
     type: "website",
+    locale: "en_IN",
   },
   twitter: {
-    card: "summary",
-    title: "Echo Ledger",
-    description: "Turn voice into tracked promises.",
+    card: "summary_large_image",
+    title: "Echo Ledger — Never lose a promise again",
+    description:
+      "Turn voice and chat into tracked commitments. Who promised what, by when.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
