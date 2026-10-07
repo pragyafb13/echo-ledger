@@ -6,6 +6,7 @@ import type { Commitment, CommitmentStatus } from "@/lib/types";
 
 interface Props {
   onProcessed: (commitments: Commitment[]) => void;
+  onBeforeUpload?: (sizeBytes: number) => boolean;
   disabled?: boolean;
 }
 
@@ -55,7 +56,7 @@ function IconText({ className }: { className?: string }) {
   );
 }
 
-export function UploadPanel({ onProcessed, disabled }: Props) {
+export function UploadPanel({ onProcessed, onBeforeUpload, disabled }: Props) {
   const [tab, setTab] = useState<Tab>("audio");
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -107,6 +108,7 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
 
   const extractFromTranscript = useCallback(
     async (transcript: string, sourceName: string) => {
+      if (onBeforeUpload && !onBeforeUpload(0)) return;
       setIsProcessing(true);
       setStatus("Extracting commitments…");
       try {
@@ -136,42 +138,33 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
         setTimeout(() => setStatus(null), 4000);
       }
     },
-    [buildCommitments, onProcessed]
+    [buildCommitments, onProcessed, onBeforeUpload]
   );
 
   const processAudio = useCallback(
     async (file: File | Blob, sourceName: string) => {
+      if (onBeforeUpload && !onBeforeUpload(file.size)) return;
       setIsProcessing(true);
       setStatus("Transcribing audio…");
-
       try {
         const form = new FormData();
         form.append("file", file, sourceName);
-
-        const transcribeRes = await fetch("/api/transcribe", {
-          method: "POST",
-          body: form,
-        });
-
+        const transcribeRes = await fetch("/api/transcribe", { method: "POST", body: form });
         if (!transcribeRes.ok) {
           const err = await transcribeRes.json();
           throw new Error(err.error || "Transcription failed");
         }
-
         const { text, demo } = await transcribeRes.json();
-        setStatus(demo ? "Demo mode — extracting commitments…" : "Extracting commitments…");
-
+        setStatus(demo ? "Demo mode — extracting…" : "Extracting commitments…");
         const extractRes = await fetch("/api/extract", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ transcript: text }),
         });
-
         if (!extractRes.ok) {
           const err = await extractRes.json();
           throw new Error(err.error || "Extraction failed");
         }
-
         const { result } = await extractRes.json();
         const commitments = buildCommitments(result, sourceName);
         onProcessed(commitments);
@@ -188,7 +181,7 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
         setTimeout(() => setStatus(null), 4000);
       }
     },
-    [buildCommitments, onProcessed]
+    [buildCommitments, onProcessed, onBeforeUpload]
   );
 
   const handleDrop = useCallback(
@@ -197,11 +190,8 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
       setIsDragging(false);
       if (disabled || isProcessing) return;
       const file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith("audio/")) {
-        processAudio(file, file.name);
-      } else {
-        setStatus("Please drop an audio file");
-      }
+      if (file && file.type.startsWith("audio/")) processAudio(file, file.name);
+      else setStatus("Please drop an audio file");
     },
     [disabled, isProcessing, processAudio]
   );
@@ -217,17 +207,14 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
       chunksRef.current = [];
-
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
-
       recorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         processAudio(blob, `recording-${new Date().toISOString().slice(0, 19)}.webm`);
         stream.getTracks().forEach((t) => t.stop());
       };
-
       mediaRecorderRef.current = recorder;
       recorder.start();
       setIsRecording(true);
@@ -290,63 +277,52 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
           className={cn(
             "relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed p-8 transition-all duration-300 sm:p-10",
             isDragging
-              ? "scale-[1.02] border-indigo-400 bg-gradient-to-br from-indigo-100 via-violet-50 to-fuchsia-100 shadow-lg shadow-indigo-200/40 dark:from-indigo-950/50 dark:via-violet-950/30 dark:to-fuchsia-950/30"
+              ? "scale-[1.02] border-indigo-400 bg-gradient-to-br from-indigo-100 via-violet-50 to-fuchsia-100 shadow-lg"
               : isRecording
-              ? "border-red-300 bg-gradient-to-br from-red-50 to-rose-50 dark:border-red-800 dark:from-red-950/30 dark:to-rose-950/20"
-              : "border-indigo-200/70 bg-gradient-to-br from-white via-indigo-50/40 to-violet-50/40 hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-100/50 dark:border-indigo-800/50 dark:from-zinc-900/80 dark:via-indigo-950/20 dark:to-violet-950/20 dark:hover:border-indigo-700",
+              ? "border-red-300 bg-gradient-to-br from-red-50 to-rose-50"
+              : "border-indigo-200/70 bg-gradient-to-br from-white via-indigo-50/40 to-violet-50/40 hover:border-indigo-300 dark:border-indigo-800/50 dark:from-zinc-900/80",
             (disabled || isProcessing) && "pointer-events-none opacity-60"
           )}
         >
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-white/40 dark:to-transparent" />
-
           {isProcessing ? (
-            <div className="relative flex flex-col items-center gap-3 py-4">
-              <div className="relative">
-                <div className="absolute inset-0 animate-ping rounded-full bg-indigo-400/30" />
-                <IconLoader className="relative h-11 w-11 animate-spin text-indigo-500" />
-              </div>
+            <div className="flex flex-col items-center gap-3 py-4">
+              <IconLoader className="h-11 w-11 animate-spin text-indigo-500" />
               <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
                 {status || "Processing…"}
               </p>
-              <p className="text-xs text-zinc-400">This usually takes a few seconds</p>
             </div>
           ) : (
             <div className="relative">
               <div
                 className={cn(
-                  "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl shadow-md transition-transform",
+                  "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl shadow-md",
                   isRecording
-                    ? "bg-gradient-to-br from-red-400 to-rose-500 text-white animate-pulse-ring shadow-red-200"
-                    : "bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-indigo-200/50 animate-float dark:shadow-none"
+                    ? "bg-gradient-to-br from-red-400 to-rose-500 text-white"
+                    : "bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white"
                 )}
               >
                 {isRecording ? <IconMic className="h-8 w-8" /> : <IconWave className="h-8 w-8" />}
               </div>
-
               <p className="text-center text-base font-bold text-zinc-800 dark:text-zinc-100">
-                {isRecording ? "Recording in progress…" : "Drop a voice memo or call"}
+                {isRecording ? "Recording…" : "Drop a voice memo or call"}
               </p>
-              <p className="mt-1 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                {isRecording
-                  ? "Tap stop when you're done"
-                  : "MP3, WAV, WEBM, M4A — or record live"}
+              <p className="mt-1 text-center text-sm text-zinc-500">
+                {isRecording ? "Tap stop when done" : "MP3, WAV, WEBM, M4A — max 1 MB free"}
               </p>
-
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 {!isRecording && (
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-200/50 transition hover:scale-[1.03] hover:shadow-xl active:scale-[0.98] dark:shadow-indigo-900/30"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg"
                   >
                     <IconUpload className="h-4 w-4" />
                     Upload file
                   </button>
                 )}
-
                 {!isRecording ? (
                   <button
                     onClick={startRecording}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white/90 px-5 py-2.5 text-sm font-bold text-indigo-700 shadow-sm backdrop-blur transition hover:scale-[1.03] hover:bg-white active:scale-[0.98] dark:border-indigo-700 dark:bg-zinc-800/90 dark:text-indigo-300 dark:hover:bg-zinc-800"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-white/90 px-5 py-2.5 text-sm font-bold text-indigo-700 dark:border-indigo-700 dark:bg-zinc-800 dark:text-indigo-300"
                   >
                     <IconMic className="h-4 w-4" />
                     Record
@@ -354,40 +330,28 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
                 ) : (
                   <button
                     onClick={stopRecording}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-red-500 to-rose-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-200/40 transition hover:scale-[1.03] active:scale-[0.98]"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-red-500 to-rose-500 px-5 py-2.5 text-sm font-bold text-white"
                   >
                     <IconSquare className="h-4 w-4" />
-                    Stop recording
+                    Stop
                   </button>
                 )}
               </div>
             </div>
           )}
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/*"
-            className="hidden"
-            onChange={handleFileSelect}
-          />
+          <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleFileSelect} />
         </div>
       ) : (
         <div
           className={cn(
-            "rounded-3xl border-2 border-indigo-200/70 bg-gradient-to-br from-white via-indigo-50/40 to-violet-50/40 p-5 dark:border-indigo-800/50 dark:from-zinc-900/80 dark:via-indigo-950/20 dark:to-violet-950/20",
+            "rounded-3xl border-2 border-indigo-200/70 bg-gradient-to-br from-white via-indigo-50/40 to-violet-50/40 p-5 dark:border-indigo-800/50 dark:from-zinc-900/80",
             (disabled || isProcessing) && "pointer-events-none opacity-60"
           )}
         >
           {isProcessing ? (
             <div className="flex flex-col items-center gap-3 py-10">
-              <div className="relative">
-                <div className="absolute inset-0 animate-ping rounded-full bg-indigo-400/30" />
-                <IconLoader className="relative h-11 w-11 animate-spin text-indigo-500" />
-              </div>
-              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                {status || "Extracting…"}
-              </p>
+              <IconLoader className="h-11 w-11 animate-spin text-indigo-500" />
+              <p className="text-sm font-semibold">{status || "Extracting…"}</p>
             </div>
           ) : (
             <>
@@ -396,28 +360,22 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
                   <IconText className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100">
-                    Paste a transcript
-                  </p>
-                  <p className="text-[11px] text-zinc-500">
-                    Call notes, chat logs, email — anything with promises
-                  </p>
+                  <p className="text-sm font-bold">Paste a transcript</p>
+                  <p className="text-[11px] text-zinc-500">Call notes, chats, emails</p>
                 </div>
               </div>
-
               <textarea
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
-                placeholder="Example: Capt. Shakil said he will review the docs by Saturday. Pravash will send the spreadsheet end of the week."
+                placeholder="Example: Capt. Shakil said he will review the docs by Saturday."
                 rows={6}
-                className="w-full resize-y rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3 text-sm leading-relaxed text-zinc-800 placeholder:text-zinc-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-indigo-900"
+                className="w-full resize-y rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3 text-sm dark:border-zinc-700 dark:bg-zinc-900/80"
               />
-
               <div className="mt-3 flex justify-end">
                 <button
                   onClick={handlePasteSubmit}
                   disabled={!pasteText.trim()}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-200/50 transition hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 dark:shadow-indigo-900/30"
+                  className="rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-40"
                 >
                   Extract commitments
                 </button>
@@ -430,11 +388,11 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
       {status && !isProcessing && (
         <p
           className={cn(
-            "text-center text-sm font-semibold animate-scale-in",
+            "text-center text-sm font-semibold",
             status.includes("Extracted")
-              ? "text-emerald-600 dark:text-emerald-400"
-              : status.includes("failed") || status.includes("denied") || status.includes("wrong")
-              ? "text-red-600 dark:text-red-400"
+              ? "text-emerald-600"
+              : status.includes("failed") || status.includes("denied")
+              ? "text-red-600"
               : "text-zinc-500"
           )}
         >
