@@ -119,7 +119,6 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-50 via-violet-50/60 to-fuchsia-50 dark:from-zinc-950 dark:via-indigo-950/30 dark:to-zinc-950">
-      {/* Floating color blobs */}
       <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-indigo-300/40 blur-3xl animate-blob dark:bg-indigo-600/20" />
       <div className="pointer-events-none absolute right-0 top-40 h-64 w-64 rounded-full bg-fuchsia-300/30 blur-3xl animate-blob animation-delay-2 dark:bg-fuchsia-600/15" />
       <div className="pointer-events-none absolute bottom-20 left-1/3 h-56 w-56 rounded-full bg-violet-300/30 blur-3xl animate-blob animation-delay-4 dark:bg-violet-600/15" />
@@ -151,7 +150,6 @@ export default function Home() {
       </header>
 
       <main className="relative mx-auto max-w-2xl px-4 py-8 sm:px-6">
-        {/* Hero */}
         <section className="mb-8 text-center animate-fade-in-up">
           <h2 className="text-2xl font-bold tracking-tight sm:text-[28px]">
             <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">
@@ -161,20 +159,18 @@ export default function Home() {
             <span className="text-zinc-900 dark:text-zinc-50">tracked promises</span>
           </h2>
           <p className="mx-auto mt-2.5 max-w-md text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
-            Upload a call or voice memo. Echo extracts who committed to what — and by when.
+            Upload audio or paste a transcript. Echo extracts who committed to what — and by when.
           </p>
         </section>
 
-        {/* Upload */}
         <section className="mb-8 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
           <UploadPanel onProcessed={handleProcessed} />
           <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-500">
             <IconSparkles className="h-3 w-3 text-violet-400" />
-            Demo mode works without a key · set OPENAI_API_KEY for real extraction
+            Free: set GROQ_API_KEY · demo works without a key
           </p>
         </section>
 
-        {/* Stats + filters */}
         {items.length > 0 && (
           <section className="mb-5 space-y-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
             <div className="grid grid-cols-3 gap-2.5">
@@ -254,7 +250,6 @@ export default function Home() {
           </section>
         )}
 
-        {/* List */}
         <section className="space-y-3">
           {filtered.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-indigo-200/60 bg-white/50 py-16 text-center backdrop-blur-sm dark:border-indigo-900/40 dark:bg-zinc-900/40 animate-fade-in">
@@ -267,7 +262,7 @@ export default function Home() {
                     No commitments yet
                   </p>
                   <p className="mt-1 text-xs text-zinc-400">
-                    Upload a recording above to get started
+                    Upload audio or paste a transcript above
                   </p>
                 </>
               ) : (
