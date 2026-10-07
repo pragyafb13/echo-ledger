@@ -35,7 +35,7 @@ export default function LandingPage() {
         <section className="mx-auto max-w-2xl text-center">
           <p className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-violet-600 shadow-sm dark:border-violet-800 dark:bg-zinc-900/70 dark:text-violet-400">
             <span className="h-1.5 w-1.5 rounded-full bg-violet-500 animate-pulse" />
-            Now live · Premium ₹49 / 24 hrs
+            Now live · from ₹49
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
             <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
@@ -60,7 +60,7 @@ export default function LandingPage() {
               href="/pricing"
               className="rounded-2xl border border-indigo-200 bg-white/80 px-6 py-3 text-sm font-bold text-indigo-700 transition hover:bg-white dark:border-indigo-700 dark:bg-zinc-900 dark:text-indigo-300"
             >
-              Premium ₹49 for 24 hours
+              See pricing
             </Link>
           </div>
           <p className="mt-4 text-[11px] text-zinc-400">
@@ -133,7 +133,7 @@ export default function LandingPage() {
           <p className="mt-2 text-xs text-zinc-500">
             <span className="font-semibold text-zinc-700 dark:text-zinc-300">Free</span> — 5 extractions/mo · 1 MB
             {" · "}
-            <span className="font-semibold text-zinc-700 dark:text-zinc-300">Premium ₹49 / 24 hours</span> — unlimited · 25 MB
+            <span className="font-semibold text-zinc-700 dark:text-zinc-300">Premium</span> — ₹49 / day · ₹399 / month · ₹3,499 / year
           </p>
           <Link href="/pricing" className="mt-4 inline-block text-xs font-bold text-indigo-600 transition hover:underline">See full pricing →</Link>
         </section>

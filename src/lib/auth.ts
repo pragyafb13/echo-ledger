@@ -1,7 +1,8 @@
 import {
-  DAY_PASS_HOURS,
   FREE_LIMITS,
+  PASSES,
   PRO_LIMITS,
+  PassKind,
   Plan,
   Session,
   UserAccount,
@@ -238,9 +239,15 @@ export function recordExtraction(email: string | null) {
   saveUsers(next);
 }
 
-/** Demo unlock: Pro for 24 hours. Real payment (UPI/Razorpay) comes next. */
-export function buyDayPass(email: string): { proUntil: string } {
-  const until = new Date(Date.now() + DAY_PASS_HOURS * 60 * 60 * 1000).toISOString();
+/** Demo unlock. Extends from now, or from the current expiry if still active. */
+export function buyPass(email: string, kind: PassKind): { proUntil: string } {
+  const hours = PASSES[kind].hours;
+  const account = getAccount(email);
+  const base =
+    account?.proUntil && new Date(account.proUntil).getTime() > Date.now()
+      ? new Date(account.proUntil).getTime()
+      : Date.now();
+  const until = new Date(base + hours * 60 * 60 * 1000).toISOString();
   const users = loadUsers();
   const next = users.map((u) =>
     u.email === email ? { ...u, plan: "pro" as Plan, proUntil: until } : u
@@ -253,8 +260,12 @@ export function buyDayPass(email: string): { proUntil: string } {
   return { proUntil: until };
 }
 
+export function buyDayPass(email: string) {
+  return buyPass(email, "day");
+}
+
 export function upgradeToPro(email: string) {
-  return buyDayPass(email);
+  return buyPass(email, "month");
 }
 
 export function canUploadFile(email: string | null, sizeBytes: number): {

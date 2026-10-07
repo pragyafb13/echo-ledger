@@ -55,5 +55,16 @@ export const PRO_LIMITS = {
   maxFileBytes: 25 * 1024 * 1024, // 25 MB
 } as const;
 
-export const DAY_PASS_PRICE_INR = 49;
-export const DAY_PASS_HOURS = 24;
+export type PassKind = "day" | "month" | "year";
+
+export const PASSES: Record<
+  PassKind,
+  { label: string; priceInr: number; hours: number; blurb: string }
+> = {
+  day: { label: "24 hours", priceInr: 49, hours: 24, blurb: "One busy call day" },
+  month: { label: "Monthly", priceInr: 399, hours: 24 * 30, blurb: "30 days of unlimited" },
+  year: { label: "Yearly", priceInr: 3499, hours: 24 * 365, blurb: "Save ₹1,289 vs monthly" },
+};
+
+export const DAY_PASS_PRICE_INR = PASSES.day.priceInr;
+export const DAY_PASS_HOURS = PASSES.day.hours;
