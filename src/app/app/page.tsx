@@ -227,7 +227,7 @@ export default function AppPage() {
               <h1 className="text-[15px] font-bold text-zinc-900 dark:text-zinc-50">Echo Ledger</h1>
               <p className="text-[11px] text-zinc-500">
                 {session ? session.name : "Guest"}
-                {usage.plan === "pro" ? " · Pro" : ` · ${usage.remaining} left this month`}
+                {usage.plan === "pro" ? " · Pro" : session ? ` · ${usage.remaining} left this month` : ` · ${usage.remaining} free trial`}
               </p>
             </div>
           </div>
@@ -248,8 +248,8 @@ export default function AppPage() {
                 Log out
               </button>
             ) : (
-              <Link href="/login" className="rounded-xl px-2.5 py-1 text-xs font-semibold text-indigo-600">
-                Log in
+              <Link href="/register" className="rounded-xl px-2.5 py-1 text-xs font-semibold text-indigo-600">
+                Register
               </Link>
             )}
             {items.length > 0 && (
@@ -288,7 +288,11 @@ export default function AppPage() {
           <p className="mt-1 text-[10px] text-zinc-400">
             {usage.plan === "pro"
               ? "Pro · unlimited extractions"
-              : `${usage.used} / ${usage.limit} free extractions used this month`}
+              : session
+              ? `${usage.used} / ${usage.limit} free extractions used this month`
+              : usage.remaining > 0
+              ? "1 free extraction, no account needed"
+              : "Trial used · register for 5/month"}
           </p>
         </section>
 

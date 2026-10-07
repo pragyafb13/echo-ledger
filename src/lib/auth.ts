@@ -158,22 +158,19 @@ export function getUsage(email: string | null): {
   proUntil: string | null;
 } {
   if (!email) {
-    const guestKey = "echo-ledger-guest-usage";
+    const guestKey = "echo-ledger-guest-trial";
     let used = 0;
     try {
-      const raw = localStorage.getItem(guestKey);
-      if (raw) {
-        const data = JSON.parse(raw) as { month: string; count: number };
-        if (data.month === monthKey()) used = data.count;
-      }
+      used = Number(localStorage.getItem(guestKey) || "0") || 0;
     } catch {
       /* ignore */
     }
+    const limit = 1;
     return {
       plan: "free",
       used,
-      limit: FREE_LIMITS.extractionsPerMonth,
-      remaining: Math.max(0, FREE_LIMITS.extractionsPerMonth - used),
+      limit,
+      remaining: Math.max(0, limit - used),
       maxFileBytes: FREE_LIMITS.maxFileBytes,
       proUntil: null,
     };
@@ -217,19 +214,9 @@ export function canExtract(email: string | null): { ok: true } | { ok: false; er
 
 export function recordExtraction(email: string | null) {
   if (!email) {
-    const guestKey = "echo-ledger-guest-usage";
-    const m = monthKey();
-    let count = 0;
-    try {
-      const raw = localStorage.getItem(guestKey);
-      if (raw) {
-        const data = JSON.parse(raw) as { month: string; count: number };
-        count = data.month === m ? data.count : 0;
-      }
-    } catch {
-      /* ignore */
-    }
-    localStorage.setItem(guestKey, JSON.stringify({ month: m, count: count + 1 }));
+    const guestKey = "echo-ledger-guest-trial";
+    const count = Number(localStorage.getItem(guestKey) || "0") || 0;
+    localStorage.setItem(guestKey, String(count + 1));
     return;
   }
   const users = loadUsers().map(ensureUsageMonth);

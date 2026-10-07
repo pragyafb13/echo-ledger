@@ -51,10 +51,10 @@ export default function LandingPage() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/register"
+              href="/app"
               className="rounded-2xl bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition hover:scale-[1.03] hover:shadow-xl"
             >
-              Start free — 5 captures/month
+              Try once free — no account
             </Link>
             <Link
               href="/pricing"
