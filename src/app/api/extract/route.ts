@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ExtractionResult } from "@/lib/types";
 
-export const runtime = "nodejs";
-export const maxDuration = 30;
-
 const SYSTEM_PROMPT = `You are an expert at extracting concrete commitments and deadlines from spoken conversations.
 
 Given a transcript of a call or voice memo, extract ONLY actionable commitments — things a specific person promised to do, with an optional deadline.
