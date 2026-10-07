@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s · Echo Ledger",
   },
   description:
-    "Turn calls, voice notes, and chat into tracked commitments. Who promised what, by when — your daily follow-up inbox.",
+    "Turn calls, voice notes, and chat into tracked commitments. Who promised what, by when — your daily follow-up inbox. Premium is ₹49 for 24 hours.",
   keywords: [
     "commitment tracker",
     "follow-up",
@@ -29,11 +29,18 @@ export const metadata: Metadata = {
     "promise ledger",
     "Echo Ledger",
   ],
-  authors: [{ name: "Echo Ledger" }],
+  authors: [{ name: "Pragya Rajpurohit" }],
+  applicationName: "Echo Ledger",
+  appleWebApp: {
+    capable: true,
+    title: "Echo Ledger",
+    statusBarStyle: "default",
+  },
+  manifest: "/manifest.webmanifest",
   openGraph: {
     title: "Echo Ledger — Never lose a promise again",
     description:
-      "Turn voice and chat into tracked commitments. Built by a founder who lived the follow-up chaos.",
+      "Turn voice and chat into tracked commitments. Premium day pass ₹49 for 24 hours.",
     url: siteUrl,
     siteName: "Echo Ledger",
     type: "website",

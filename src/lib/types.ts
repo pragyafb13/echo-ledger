@@ -34,12 +34,15 @@ export interface UserAccount {
   createdAt: string;
   usageMonth: string; // YYYY-MM
   extractionCount: number;
+  /** ISO time when a 24h day pass expires. Absent = not a day pass. */
+  proUntil?: string | null;
 }
 
 export interface Session {
   email: string;
   name: string;
   plan: Plan;
+  proUntil?: string | null;
 }
 
 export const FREE_LIMITS = {
@@ -51,3 +54,6 @@ export const PRO_LIMITS = {
   extractionsPerMonth: Infinity,
   maxFileBytes: 25 * 1024 * 1024, // 25 MB
 } as const;
+
+export const DAY_PASS_PRICE_INR = 49;
+export const DAY_PASS_HOURS = 24;
