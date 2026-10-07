@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -16,6 +16,25 @@ export const metadata: Metadata = {
   title: "Echo Ledger — Track commitments from voice",
   description:
     "Upload a call or voice memo. Echo Ledger extracts who committed to what, and by when — then keeps them tracked.",
+  openGraph: {
+    title: "Echo Ledger",
+    description: "Turn voice into tracked promises.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Echo Ledger",
+    description: "Turn voice into tracked promises.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#eef2ff" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
