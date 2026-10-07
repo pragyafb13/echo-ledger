@@ -31,9 +31,9 @@ function IconLoader({ className }: { className?: string }) {
     </svg>
   );
 }
-function IconFile({ className }: { className?: string }) {
+function IconWave({ className }: { className?: string }) {
   return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
     </svg>
   );
@@ -41,7 +41,7 @@ function IconFile({ className }: { className?: string }) {
 function IconSquare({ className }: { className?: string }) {
   return (
     <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-      <rect x="6" y="6" width="12" height="12" rx="1" />
+      <rect x="6" y="6" width="12" height="12" rx="1.5" />
     </svg>
   );
 }
@@ -189,7 +189,7 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -198,43 +198,62 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-all",
+          "relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed p-8 transition-all duration-200 sm:p-10",
           isDragging
-            ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/30"
-            : "border-zinc-200 bg-zinc-50 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900/50",
+            ? "border-indigo-400 bg-indigo-50 scale-[1.01] dark:bg-indigo-950/30"
+            : isRecording
+            ? "border-red-300 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20"
+            : "border-zinc-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 dark:border-zinc-700 dark:bg-zinc-900/60 dark:hover:border-indigo-700",
           (disabled || isProcessing) && "pointer-events-none opacity-60"
         )}
       >
         {isProcessing ? (
-          <div className="flex flex-col items-center gap-3">
-            <IconLoader className="h-10 w-10 animate-spin text-indigo-500" />
-            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+          <div className="flex flex-col items-center gap-3 py-4">
+            <div className="relative">
+              <IconLoader className="h-10 w-10 animate-spin text-indigo-500" />
+            </div>
+            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
               {status || "Processing…"}
             </p>
+            <p className="text-xs text-zinc-400">This usually takes a few seconds</p>
           </div>
         ) : (
           <>
-            <IconFile className="mb-3 h-10 w-10 text-zinc-400" />
-            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-              Drop a voice memo or call recording
+            <div
+              className={cn(
+                "mb-4 flex h-14 w-14 items-center justify-center rounded-2xl",
+                isRecording
+                  ? "bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400 animate-pulse-ring"
+                  : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400"
+              )}
+            >
+              {isRecording ? <IconMic className="h-7 w-7" /> : <IconWave className="h-7 w-7" />}
+            </div>
+
+            <p className="text-base font-semibold text-zinc-800 dark:text-zinc-100">
+              {isRecording ? "Recording in progress…" : "Drop a voice memo or call"}
             </p>
-            <p className="mt-1 text-xs text-zinc-500">
-              MP3, WAV, WEBM, M4A — or record live
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              {isRecording
+                ? "Tap stop when you're done"
+                : "MP3, WAV, WEBM, M4A — or record live"}
             </p>
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500"
-              >
-                <IconUpload className="h-4 w-4" />
-                Upload file
-              </button>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              {!isRecording && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-500 active:scale-[0.98] dark:shadow-none"
+                >
+                  <IconUpload className="h-4 w-4" />
+                  Upload file
+                </button>
+              )}
 
               {!isRecording ? (
                 <button
                   onClick={startRecording}
-                  className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                  className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 active:scale-[0.98] dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
                 >
                   <IconMic className="h-4 w-4" />
                   Record
@@ -242,7 +261,7 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
               ) : (
                 <button
                   onClick={stopRecording}
-                  className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-500 animate-pulse"
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-500 active:scale-[0.98]"
                 >
                   <IconSquare className="h-4 w-4" />
                   Stop recording
@@ -262,7 +281,18 @@ export function UploadPanel({ onProcessed, disabled }: Props) {
       </div>
 
       {status && !isProcessing && (
-        <p className="text-center text-sm text-zinc-500">{status}</p>
+        <p
+          className={cn(
+            "text-center text-sm font-medium animate-fade-in-up",
+            status.includes("Extracted")
+              ? "text-emerald-600 dark:text-emerald-400"
+              : status.includes("failed") || status.includes("denied") || status.includes("wrong")
+              ? "text-red-600 dark:text-red-400"
+              : "text-zinc-500"
+          )}
+        >
+          {status}
+        </p>
       )}
     </div>
   );
